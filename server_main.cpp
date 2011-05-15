@@ -1,5 +1,9 @@
 #include <cstdlib>
 
+#include <iostream>
+#include <string>
+#include <boost/thread.hpp>
+
 #include "configuration.hpp"
 #include "server.hpp"
 
@@ -20,7 +24,14 @@ int main(int argc, const char *argv[])
 	}
 
 	shiritori::server server(configuration.port());
-	server.start();
+	boost::thread service(server.start());
 
+	std::string input;
+	while (input != "exit")
+	{
+		std::cin >> input;
+	}
+	server.stop();
+	service.join();
 	return EXIT_SUCCESS;
 }
