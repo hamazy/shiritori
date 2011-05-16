@@ -25,7 +25,7 @@ public:
 
 	virtual ~configuration() {}
 
-	bool parse(int argc, const char *argv[])
+	bool parse(int argc, char const * const argv[])
 	{
 		namespace po = boost::program_options;
 		try
@@ -54,15 +54,15 @@ public:
 	}
 
 private:
-	configuration(const configuration &src);
-	configuration& operator=(const configuration &src);
+	configuration(configuration const &src);
+	configuration& operator=(configuration const &src);
 
-	static const char *OPTION_DESCRIPTION;
-	static const char *OPTION_HELP;
-	static const char *OPTION_DESCRIPTION_HELP;
-	static const char *OPTION_PORT;
-	static const char *OPTION_DESCRIPTION_PORT;
-	static const unsigned DEFAULT_PORT;
+	static char const*OPTION_DESCRIPTION;
+	static char const*OPTION_HELP;
+	static char const*OPTION_DESCRIPTION_HELP;
+	static char const*OPTION_PORT;
+	static char const*OPTION_DESCRIPTION_PORT;
+	static unsigned const DEFAULT_PORT;
 };
 
 } // namespace shiritori
