@@ -2,6 +2,10 @@
 #define SHIRITORI_SERVER_HPP
 
 #include <iostream>
+#include <set>
+#include <algorithm>
+#include <queue>
+
 #include <boost/thread.hpp>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
@@ -10,63 +14,181 @@
 
 namespace shiritori {
 
-class tcp_connection: public boost::enable_shared_from_this<tcp_connection> {
-	boost::asio::ip::tcp::socket m_socket;
-	std::string m_message;
-
+class message
+{
+	enum { message_length = 8 };
+	char data_[message_length];
 public:
-	typedef boost::shared_ptr<tcp_connection> pointer;
-
-	tcp_connection(boost::asio::io_service& io_service)
-		: m_socket(io_service)
-		, m_message() {}
-
-	virtual ~tcp_connection() {}
-
-	boost::asio::ip::tcp::socket& socket() { return m_socket; }
-
-	void start()
+	message() {}
+	virtual ~message() {}
+	char *data()
 	{
-		m_message = "hoge\n";
+		return data_;
+	}
+	char const *data() const
+	{
+		return data_;
+	}
+	std::size_t size() const
+	{
+		return message_length;
+	}
+};
 
-		boost::asio::async_write(m_socket, boost::asio::buffer(m_message),
-								 boost::bind(&tcp_connection::handle_write, shared_from_this(),
-											 boost::asio::placeholders::error,
-											 boost::asio::placeholders::bytes_transferred));
+class player {
+public:
+	typedef boost::shared_ptr<player> pointer;
+	virtual ~player() {}
+	virtual void deliver(message const &message) = 0;
+};
+
+class game
+{
+	std::set<player::pointer> players_;
+public:
+	game()
+		: players_() {}
+
+	virtual ~game() {}
+
+	void join(player::pointer player)
+	{
+		players_.insert(player);
 	}
 
-	void handle_write(const boost::system::error_code& /*error*/,
-					  size_t /*bytes_transferred*/) {}
-
-
-	static pointer create(boost::asio::io_service& io_service)
+	void leave(player::pointer player)
 	{
-		return pointer(new tcp_connection(io_service));
+		players_.erase(player);
+	}
+	void deliver(message const &message)
+	{
+		std::for_each(
+			players_.begin(), players_.end(),
+			boost::bind(&player::deliver, _1, boost::ref(message)));
 	}
 
 private:
-	tcp_connection();
-	tcp_connection(const tcp_connection &src);
-	tcp_connection &operator=(const tcp_connection &src);
+	game(game const &src);
+	game &operator=(game const &src);
 
 };
 
-class server {
+class session
+	: public boost::enable_shared_from_this<session>,
+	  public player
+{
+	boost::asio::ip::tcp::socket socket_;
+	game &game_;
+	message message_;
+	std::queue<message> message_queue_;
+
 public:
-	const unsigned m_port;
-	boost::asio::io_service &m_io_service;
-	boost::asio::ip::tcp::acceptor m_acceptor;
-	bool m_terminated;
-	boost::condition_variable m_condition;
-	boost::mutex m_mutex;
+	typedef boost::shared_ptr<session> pointer;
+
+	session(boost::asio::io_service& io_service, game &game)
+		: socket_(io_service)
+		, game_(game)
+		, message_()
+		, message_queue_()
+	{}
+
+	virtual ~session() {}
+
+	boost::asio::ip::tcp::socket& socket() { return socket_; }
+
+	void start()
+	{
+		game_.join(shared_from_this());
+		read_message();
+	}
+
+	void handle_read(boost::system::error_code const &error)
+	{
+		if (error)
+		{
+			leave_from_game();
+			return;
+		}
+		game_.deliver(message_);
+		read_message();
+	}
+
+	void handle_write(boost::system::error_code const &error)
+	{
+		if (error)
+		{
+			leave_from_game();
+			return;
+		}
+		message_queue_.pop();
+
+		if (message_queue_.empty()) return;
+		write_front_message();
+	}
+
+	void deliver(message const &message_to_deliver)
+	{
+		const bool write_in_progress(!message_queue_.empty());
+		message_queue_.push(message_to_deliver);
+		if (write_in_progress) return;
+		write_front_message();
+	}
+
+	static pointer create(boost::asio::io_service& io_service, game &game)
+	{
+		return pointer(new session(io_service, game));
+	}
+
+private:
+	void read_message()
+	{
+		boost::asio::async_read(
+			socket_,
+			boost::asio::buffer(message_.data(), message_.size()),
+			boost::bind(
+				&session::handle_read, shared_from_this(),
+				boost::asio::placeholders::error));
+	}
+	void write_front_message()
+	{
+		const message message_delivering(message_queue_.front());
+		boost::asio::async_write(
+			socket_,
+			boost::asio::buffer(message_delivering.data(), message_delivering.size()),
+			boost::bind(
+				&session::handle_write, shared_from_this(),
+				boost::asio::placeholders::error));
+	}
+	void leave_from_game()
+	{
+		game_.leave(shared_from_this());
+	}
+
+	session();
+	session(session const &src);
+	session &operator=(session const &src);
+
+};
+
+class server
+{
+public:
+	unsigned const port_;
+	boost::asio::io_service &io_service_;
+	boost::asio::ip::tcp::acceptor acceptor_;
+	bool terminated_;
+	boost::condition_variable condition_;
+	boost::mutex mutex_;
+	game game_;
 public:
 	explicit server(unsigned port, boost::asio::io_service &io_service)
-		: m_port(port)
-		, m_io_service(io_service)
-		, m_acceptor(io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), m_port))
-		, m_terminated(false)
-		, m_condition()
-		, m_mutex()
+		: port_(port)
+		, io_service_(io_service)
+		, acceptor_(io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port_))
+		, terminated_(false)
+		, condition_()
+		, mutex_()
+		, game_()
 	{
 		start_accept();
 	}
@@ -75,20 +197,22 @@ public:
 
 	void start_accept()
 	{
-		tcp_connection::pointer new_connection =
-			tcp_connection::create(m_acceptor.io_service());
+		session::pointer session(
+			session::create(
+				acceptor_.io_service(), game_));
 
-		m_acceptor.async_accept(new_connection->socket(),
-							   boost::bind(&server::handle_accept, this, new_connection,
-										   boost::asio::placeholders::error));
+		acceptor_.async_accept(
+			session->socket(),
+			boost::bind(
+				&server::handle_accept, this, session,
+				boost::asio::placeholders::error));
 	}
 
-	void handle_accept(tcp_connection::pointer new_connection,
-					   boost::system::error_code const &error)
+	void handle_accept(session::pointer session, boost::system::error_code const &error)
 	{
 		if (error) return;
 
-		new_connection->start();
+		session->start();
 		start_accept();
 	}
 
@@ -99,31 +223,31 @@ public:
 
 	void operator()()
 	{
-		boost::unique_lock<boost::mutex> lock(m_mutex);
-		while (!m_terminated)
+		boost::unique_lock<boost::mutex> lock(mutex_);
+		while (!terminated_)
 		{
-			m_io_service.run();
-			m_condition.wait(lock);
+			io_service_.run();
+			condition_.wait(lock);
 		}
 	}
 
 	void stop()
 	{
-		m_io_service.stop();
+		io_service_.stop();
 		{
-			boost::lock_guard<boost::mutex> lock(m_mutex);
-			m_terminated = true;
+			boost::lock_guard<boost::mutex> lock(mutex_);
+			terminated_ = true;
 		}
-		m_condition.notify_all();
+		condition_.notify_all();
 	}
 
 private:
 	server();
-	server(const server &src);
+	server(server const &src);
 	server& operator=(const server &src);
 
 };
 
-}
+} // namespace shiritori
 
 #endif	// SHIRITORI_SERVER_HPP

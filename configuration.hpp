@@ -7,20 +7,20 @@
 namespace shiritori {
 
 class configuration {
-	unsigned m_port;
-	boost::program_options::options_description m_description;
-	boost::program_options::variables_map m_variable_map;
+	unsigned port_;
+	boost::program_options::options_description description_;
+	boost::program_options::variables_map map_;
 
 public:
 	configuration()
-		: m_port(DEFAULT_PORT)
-		, m_description(OPTION_DESCRIPTION)
-		, m_variable_map()
+		: port_(DEFAULT_PORT)
+		, description_(OPTION_DESCRIPTION)
+		, map_()
 	{
 		namespace po = boost::program_options;
-		m_description.add_options()
+		description_.add_options()
 			(OPTION_HELP, OPTION_DESCRIPTION_HELP)
-			(OPTION_PORT, po::value<unsigned>(&m_port)->default_value(DEFAULT_PORT), OPTION_DESCRIPTION_PORT);
+			(OPTION_PORT, po::value<unsigned>(&port_)->default_value(DEFAULT_PORT), OPTION_DESCRIPTION_PORT);
 	}
 
 	virtual ~configuration() {}
@@ -30,13 +30,13 @@ public:
 		namespace po = boost::program_options;
 		try
 		{
-			po::store(po::parse_command_line(argc, argv, m_description), m_variable_map);
-			po::notify(m_variable_map);
+			po::store(po::parse_command_line(argc, argv, description_), map_);
+			po::notify(map_);
 
-			if (m_variable_map.count(OPTION_HELP)) return false;
-			if (!m_variable_map.count(OPTION_PORT)) return true;
+			if (map_.count(OPTION_HELP)) return false;
+			if (!map_.count(OPTION_PORT)) return true;
 
-			m_port = m_variable_map[OPTION_PORT].as<unsigned>();
+			port_ = map_[OPTION_PORT].as<unsigned>();
 		}
 		catch (const std::exception &exception)
 		{
@@ -46,11 +46,11 @@ public:
 		return true;
 	}
 
-	unsigned port() const { return m_port; }
+	unsigned port() const { return port_; }
 
 	void print_usage() const
 	{
-		std::cout << m_description << std::endl;
+		std::cout << description_ << std::endl;
 	}
 
 private:
