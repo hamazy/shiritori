@@ -7,6 +7,7 @@
 
 #include <string>
 #include <sstream>
+#include <vector>
 
 namespace shiritori {
 
@@ -19,7 +20,7 @@ struct request_handler
 struct command_unknown_error
 	: public request_handler
 {
-	virtual std::string get_response(std::string const &request) const
+	std::string get_response(std::string const &request) const
 	{
 		std::string command(request); // TODO
 		std::stringstream ss;
@@ -36,6 +37,41 @@ public:
 	std::string get_response(std::string const &request) const
 	{
 		return request + "\r\n";
+	}
+};
+
+template<std::size_t HISTORY_SIZE>
+class show_history
+	: public request_handler
+{
+	std::vector<std::string> &history_;
+public:
+	show_history(std::vector<std::string> &history)
+		: history_(history) {}
+	virtual ~show_history() {}
+	std::string get_response(std::string const &request) const
+	{
+		if (history_.empty()) return "no history.\r\n";
+
+		return std::accumulate(
+			std::max(history_.begin(), history_.end() - HISTORY_SIZE),
+			history_.end(),
+			std::string("\r\n"));
+	}
+};
+
+class reset_history
+	: public request_handler
+{
+	std::vector<std::string> &history_;
+public:
+	reset_history(std::vector<std::string> &history)
+		: history_(history) {}
+	virtual ~reset_history() {}
+	std::string get_response(std::string const &request) const
+	{
+		history_.clear();
+		return "reset done.\r\n";
 	}
 };
 

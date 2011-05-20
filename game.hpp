@@ -7,6 +7,7 @@
 
 #include <set>
 #include <string>
+#include <vector>
 
 #include <boost/iterator/transform_iterator.hpp>
 #include <boost/lambda/construct.hpp>
@@ -96,10 +97,12 @@ class game
 {
 	std::set<player::pointer> players_;
 	request_handler_map request_handlers_;
+	std::vector<std::string> history_;
 public:
 	game()
 		: players_()
 		, request_handlers_()
+		, history_()
 	{}
 	virtual ~game() {}
 
@@ -127,6 +130,11 @@ public:
 	void add_request_handler(request_spec *spec, request_handler *handler)
 	{
 		request_handlers_.add(spec, handler);
+	}
+
+	std::vector<std::string> &history()
+	{
+		return history_;
 	}
 
 private:

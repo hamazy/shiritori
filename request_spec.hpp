@@ -5,6 +5,8 @@
 #ifndef SHIRITORI_REQUEST_SPEC_HPP_
 #define SHIRITORI_REQUEST_SPEC_HPP_
 
+#include <boost/xpressive/xpressive.hpp>
+
 namespace shiritori {
 
 struct request_spec
@@ -18,10 +20,24 @@ struct command_request
 	: public request_spec
 {
 	virtual ~command_request() {}
-	virtual bool operator()(std::string const &request) const
+	bool operator()(std::string const &request) const
 	{
 		if (request.empty()) return false;
 		return request[0] == ':';
+	}
+};
+
+class specific_command_request
+	: public request_spec
+{
+	boost::xpressive::sregex const pattern_;
+public:
+	specific_command_request(char const *pattern)
+		: pattern_(boost::xpressive::sregex::compile(pattern)) {}
+	virtual ~specific_command_request() {}
+	bool operator()(std::string const &request) const
+	{
+		return boost::xpressive::regex_match(request, pattern_);
 	}
 };
 
@@ -29,7 +45,7 @@ struct any_request
 	: public request_spec
 {
 	virtual ~any_request() {}
-	virtual bool operator()(std::string const &request) const
+	bool operator()(std::string const &request) const
 	{
 		return true;
 	}
