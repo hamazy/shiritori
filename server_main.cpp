@@ -7,7 +7,6 @@
 
 #include "configuration.hpp"
 #include "server.hpp"
-#include "game.hpp"
 
 char const *shiritori::configuration::OPTION_DESCRIPTION = "Options";
 char const *shiritori::configuration::OPTION_HELP = "help";
@@ -26,8 +25,7 @@ int main(int argc, char const * const argv[])
 	}
 
 	boost::asio::io_service io_service;
-	shiritori::game game;
-	shiritori::server server(configuration.port(), game, io_service);
+	shiritori::server server(configuration.port(), configuration.the_game(), io_service);
 	boost::thread service(server.start());
 
 	std::string input;

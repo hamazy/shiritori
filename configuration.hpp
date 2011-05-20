@@ -4,16 +4,22 @@
 #include <string>
 #include <boost/program_options.hpp>
 
+#include "game.hpp"
+#include "request_spec.hpp"
+
 namespace shiritori {
 
-class configuration {
+class configuration
+{
 	unsigned port_;
+	game game_;
 	boost::program_options::options_description description_;
 	boost::program_options::variables_map map_;
 
 public:
 	configuration()
 		: port_(DEFAULT_PORT)
+		, game_()
 		, description_(OPTION_DESCRIPTION)
 		, map_()
 	{
@@ -51,6 +57,12 @@ public:
 	void print_usage() const
 	{
 		std::cout << description_ << std::endl;
+	}
+
+	game &the_game()
+	{
+		game_.add_request_handler(new any_request, new identical_response);
+		return game_;
 	}
 
 private:

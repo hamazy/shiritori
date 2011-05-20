@@ -9,19 +9,13 @@
 #include <string>
 
 #include <boost/iterator/transform_iterator.hpp>
+#include <boost/lambda/construct.hpp>
 
 #include "player.hpp"
 #include "request_handler.hpp"
+#include "request_spec.hpp"
 
 namespace shiritori {
-
-class request_spec
-	: public std::unary_function<std::string,bool>
-{
-public:
-	virtual ~request_spec() {}
-	virtual bool operator()(std::string const &request) const = 0;
-};
 
 class request_handler_map
 {
@@ -31,9 +25,17 @@ class request_handler_map
 	struct get_key
 		: public std::unary_function<map::value_type,map::key_type>
 	{
-		map::key_type operator()(const map::value_type &value) const
+		map::key_type operator()(map::value_type const &value) const
 		{
 			return value.first;
+		}
+	};
+	struct get_mapped
+		: public std::unary_function<map::value_type,map::mapped_type>
+	{
+		map::mapped_type operator()(map::value_type const &value) const
+		{
+			return value.second;
 		}
 	};
 
@@ -54,7 +56,18 @@ class request_handler_map
 public:
 	request_handler_map()
 		: request_handlers_() {}
-	virtual ~request_handler_map() {}
+
+	virtual ~request_handler_map()
+	{
+		std::for_each(
+			boost::make_transform_iterator(request_handlers_.begin(), get_key()),
+			boost::make_transform_iterator(request_handlers_.end(), get_key()),
+			std::default_delete<request_spec>());
+		std::for_each(
+			boost::make_transform_iterator(request_handlers_.begin(), get_mapped()),
+			boost::make_transform_iterator(request_handlers_.end(), get_mapped()),
+			std::default_delete<request_handler>());
+	}
 
 	request_handler *find(std::string const &request)
 	{
@@ -69,9 +82,9 @@ public:
 		return found_pair->second;
 	}
 
-	void add(request_spec &spec, request_handler &handler)
+	void add(request_spec *spec, request_handler *handler)
 	{
-		request_handlers_.insert(std::make_pair(&spec, &handler));
+		request_handlers_.insert(std::make_pair(spec, handler));
 	}
 
 private:
@@ -111,7 +124,7 @@ public:
 			boost::bind(&player::deliver, _1, boost::ref(response)));
 	}
 
-	void add_request_handler(request_spec &spec, request_handler &handler)
+	void add_request_handler(request_spec *spec, request_handler *handler)
 	{
 		request_handlers_.add(spec, handler);
 	}
