@@ -5,30 +5,38 @@
 #ifndef SHIRITORI_REQUEST_HANDLER_HPP_
 #define SHIRITORI_REQUEST_HANDLER_HPP_
 
+#include <string>
+#include <sstream>
+
 namespace shiritori {
 
-class request_handler
+struct request_handler
 {
-public:
 	virtual ~request_handler() {}
 	virtual std::string get_response(std::string const &request) const = 0;
 };
 
-class identical_response
+struct command_unknown_error
+	: public request_handler
+{
+	virtual std::string get_response(std::string const &request) const
+	{
+		std::string command(request); // TODO
+		std::stringstream ss;
+		ss << "unknown command" << command << "\r\n";
+		return  ss.str();
+	}
+};
+
+struct identical_response
 	: public request_handler
 {
 public:
-	identical_response() {}
 	virtual ~identical_response() {}
 	std::string get_response(std::string const &request) const
 	{
 		return request + "\r\n";
 	}
-
-private:
-	identical_response(identical_response const &src);
-	identical_response &operator=(identical_response const &src);
-
 };
 
 } // namespace shiritori

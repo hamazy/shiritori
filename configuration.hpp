@@ -61,6 +61,7 @@ public:
 
 	game &the_game()
 	{
+		game_.add_request_handler(new command_request, new command_unknown_error);
 		game_.add_request_handler(new any_request, new identical_response);
 		return game_;
 	}

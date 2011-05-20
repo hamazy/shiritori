@@ -7,28 +7,32 @@
 
 namespace shiritori {
 
-class request_spec
+struct request_spec
 	: public std::unary_function<std::string,bool>
 {
-public:
 	virtual ~request_spec() {}
 	virtual bool operator()(std::string const &request) const = 0;
 };
 
-class any_request
+struct command_request
 	: public request_spec
 {
-public:
-	any_request() {}
+	virtual ~command_request() {}
+	virtual bool operator()(std::string const &request) const
+	{
+		if (request.empty()) return false;
+		return request[0] == ':';
+	}
+};
+
+struct any_request
+	: public request_spec
+{
 	virtual ~any_request() {}
 	virtual bool operator()(std::string const &request) const
 	{
 		return true;
 	}
-private:
-	any_request(any_request const &src);
-	any_request &operator=(any_request const &src);
-
 };
 
 }
