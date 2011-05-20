@@ -33,11 +33,12 @@ class specific_command_request
 	boost::xpressive::sregex const pattern_;
 public:
 	specific_command_request(char const *pattern)
-		: pattern_(boost::xpressive::sregex::compile(pattern)) {}
+		: pattern_(boost::xpressive::sregex::compile(std::string(":") + pattern + std::string(".*"))) {}
 	virtual ~specific_command_request() {}
 	bool operator()(std::string const &request) const
 	{
-		return boost::xpressive::regex_match(request, pattern_);
+		boost::xpressive::smatch what;
+		return boost::xpressive::regex_match(request, what, pattern_);
 	}
 };
 

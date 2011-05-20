@@ -64,7 +64,7 @@ public:
 		game_.add_request_handler(new specific_command_request("history"), new show_history<5>(game_.history()));
 		game_.add_request_handler(new specific_command_request("reset"), new reset_history(game_.history()));
 		game_.add_request_handler(new command_request, new command_unknown_error);
-		game_.add_request_handler(new any_request, new identical_response);
+		game_.add_request_handler(new any_request, new identical_response(game_.history()));
 		return game_;
 	}
 

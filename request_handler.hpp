@@ -32,10 +32,14 @@ struct command_unknown_error
 struct identical_response
 	: public request_handler
 {
+	std::vector<std::string> &history_;
 public:
+	identical_response(std::vector<std::string> &history)
+		: history_(history) {}
 	virtual ~identical_response() {}
 	std::string get_response(std::string const &request) const
 	{
+		history_.push_back(request);
 		return request + "\r\n";
 	}
 };
@@ -52,11 +56,12 @@ public:
 	std::string get_response(std::string const &request) const
 	{
 		if (history_.empty()) return "no history.\r\n";
-
-		return std::accumulate(
+		std::string result;
+		std::for_each(
 			std::max(history_.begin(), history_.end() - HISTORY_SIZE),
 			history_.end(),
-			std::string("\r\n"));
+			[&result](std::string const &string){ result.append(string); result.append("\r\n"); });
+		return result;
 	}
 };
 
