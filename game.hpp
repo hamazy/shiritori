@@ -18,23 +18,26 @@
 
 namespace shiritori {
 
-class request_handler_map
+class request_handlers
 {
-	typedef std::map<request_spec *,request_handler *> map;
-	map request_handlers_;
+	typedef request_spec* spec_type;
+	typedef request_handler* data_type;
+	typedef std::pair<spec_type,data_type> value_type;
+	typedef std::vector<value_type> container_type;
+	container_type request_handlers_;
 
-	struct get_key
-		: public std::unary_function<map::value_type,map::key_type>
+	struct get_spec
+		: public std::unary_function<value_type,spec_type>
 	{
-		map::key_type operator()(map::value_type const &value) const
+		spec_type operator()(value_type const &value) const
 		{
 			return value.first;
 		}
 	};
-	struct get_mapped
-		: public std::unary_function<map::value_type,map::mapped_type>
+	struct get_handler
+		: public std::unary_function<value_type,data_type>
 	{
-		map::mapped_type operator()(map::value_type const &value) const
+		data_type operator()(value_type const &value) const
 		{
 			return value.second;
 		}
@@ -55,48 +58,48 @@ class request_handler_map
 	};
 
 public:
-	request_handler_map()
+	request_handlers()
 		: request_handlers_() {}
 
-	virtual ~request_handler_map()
+	virtual ~request_handlers()
 	{
 		std::for_each(
-			boost::make_transform_iterator(request_handlers_.begin(), get_key()),
-			boost::make_transform_iterator(request_handlers_.end(), get_key()),
+			boost::make_transform_iterator(request_handlers_.begin(), get_spec()),
+			boost::make_transform_iterator(request_handlers_.end(), get_spec()),
 			std::default_delete<request_spec>());
 		std::for_each(
-			boost::make_transform_iterator(request_handlers_.begin(), get_mapped()),
-			boost::make_transform_iterator(request_handlers_.end(), get_mapped()),
+			boost::make_transform_iterator(request_handlers_.begin(), get_handler()),
+			boost::make_transform_iterator(request_handlers_.end(), get_handler()),
 			std::default_delete<request_handler>());
 	}
 
 	request_handler *find(std::string const &request)
 	{
-		boost::transform_iterator<get_key, map::iterator> end(boost::make_transform_iterator(request_handlers_.end(), get_key()));
-		boost::transform_iterator<get_key, map::iterator> found_spec(
+		boost::transform_iterator<get_spec, container_type::iterator> end(boost::make_transform_iterator(request_handlers_.end(), get_spec()));
+		boost::transform_iterator<get_spec, container_type::iterator> found_spec(
 			std::find_if(
-				boost::make_transform_iterator(request_handlers_.begin(), get_key()),
+				boost::make_transform_iterator(request_handlers_.begin(), get_spec()),
 				end,
 				spec_conformed(request)));
 		if (found_spec == end) return 0;
-		map::iterator found_pair(found_spec.base());
+		container_type::iterator found_pair(found_spec.base());
 		return found_pair->second;
 	}
 
 	void add(request_spec *spec, request_handler *handler)
 	{
-		request_handlers_.insert(std::make_pair(spec, handler));
+		request_handlers_.push_back(std::make_pair(spec, handler));
 	}
 
 private:
-	request_handler_map(request_handler_map const &src);
-	request_handler_map &operator=(request_handler_map const &src);
+	request_handlers(request_handlers const &src);
+	request_handlers &operator=(request_handlers const &src);
 };
 
 class game
 {
 	std::set<player::pointer> players_;
-	request_handler_map request_handlers_;
+	request_handlers request_handlers_;
 	std::vector<std::string> history_;
 public:
 	game()
