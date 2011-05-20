@@ -2,7 +2,6 @@
 #define SHIRITORI_SERVER_HPP
 
 #include <iostream>
-#include <set>
 #include <algorithm>
 #include <queue>
 #include <string>
@@ -13,45 +12,10 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 
+#include "game.hpp"
+#include "player.hpp"
+
 namespace shiritori {
-
-class player {
-public:
-	typedef boost::shared_ptr<player> pointer;
-	virtual ~player() {}
-	virtual void deliver(std::string const &message) = 0;
-};
-
-class game
-{
-	std::set<player::pointer> players_;
-public:
-	game()
-		: players_() {}
-
-	virtual ~game() {}
-
-	void join(player::pointer player)
-	{
-		players_.insert(player);
-	}
-
-	void leave(player::pointer player)
-	{
-		players_.erase(player);
-	}
-	void deliver(std::string const &message)
-	{
-		std::for_each(
-			players_.begin(), players_.end(),
-			boost::bind(&player::deliver, _1, boost::ref(message)));
-	}
-
-private:
-	game(game const &src);
-	game &operator=(game const &src);
-
-};
 
 class session
 	: public boost::enable_shared_from_this<session>,
@@ -87,7 +51,7 @@ public:
 		std::istream stream(&buffer_);
 		std::getline(stream, line);
 		
-		game_.deliver(line + "\r\n");
+		game_.respond_to(line);
 		read_message();
 	}
 
@@ -164,16 +128,16 @@ public:
 	bool terminated_;
 	boost::condition_variable condition_;
 	boost::mutex mutex_;
-	game game_;
+	game &game_;
 public:
-	explicit server(unsigned port, boost::asio::io_service &io_service)
+	explicit server(unsigned port, game &game, boost::asio::io_service &io_service)
 		: port_(port)
 		, io_service_(io_service)
 		, acceptor_(io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port_))
 		, terminated_(false)
 		, condition_()
 		, mutex_()
-		, game_()
+		, game_(game)
 	{
 		start_accept();
 	}
