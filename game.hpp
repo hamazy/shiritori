@@ -119,7 +119,7 @@ public:
 		players_.erase(player);
 	}
 
-	void respond_to(std::string const &request)
+	void respond_to(player::pointer requesting_player, std::string const &request)
 	{
 		request_handler const *handler(request_handlers_.find(request));
 		if (handler == 0) return;

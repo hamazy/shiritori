@@ -52,7 +52,7 @@ public:
 		std::istream stream(&buffer_);
 		std::getline(stream, line);
 		boost::algorithm::trim(line);
-		game_.respond_to(line);
+		game_.respond_to(shared_from_this(), line);
 		read_message();
 	}
 
