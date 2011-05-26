@@ -64,8 +64,9 @@ public:
 		game_.add_request_handler(new specific_command_request("history"), new show_history<5>(game_.history()));
 		game_.add_request_handler(new specific_command_request("reset"), new reset_history(game_.history()));
 		game_.add_request_handler(new command_request, new command_unknown_error);
-		game_.add_request_handler(new not_<begin_with_previous_tail, spec_trait<begin_with_previous_tail>::constructor_arg1_type >(game_.history()), new not_begin_with_previous_tail_error(game_.history()));
-		game_.add_request_handler(new not_<known_word_request, spec_trait<known_word_request>::constructor_arg1_type >, new word_unkonw_error);
+		game_.add_request_handler(new not_<begin_with_previous_tail>(game_.history()), new not_begin_with_previous_tail_error(game_.history()));
+		game_.add_request_handler(new not_<unique_word_request>(game_.history()), new not_unique_word_error);
+		game_.add_request_handler(new not_<known_word_request>, new word_unkonw_error);
 		game_.add_request_handler(new any_request, new identical_response(game_.history()));
 		return game_;
 	}

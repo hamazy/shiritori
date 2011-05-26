@@ -24,7 +24,7 @@ struct command_unknown_error
 	{
 		std::string command(request); // TODO
 		std::stringstream ss;
-		ss << "unknown command" << command << "\r\n";
+		ss << ">> unknown command" << command << "\r\n";
 		return  ss.str();
 	}
 };
@@ -40,7 +40,7 @@ public:
 	std::string get_response(std::string const &request) const
 	{
 		history_.push_back(request);
-		return request + "\r\n";
+		return std::string("=> ") + request + "\r\n";
 	}
 };
 
@@ -55,12 +55,12 @@ public:
 	virtual ~show_history() {}
 	std::string get_response(std::string const &request) const
 	{
-		if (history_.empty()) return "no history.\r\n";
+		if (history_.empty()) return ">> no history.\r\n";
 		std::string result;
 		std::for_each(
 			std::max(history_.begin(), history_.end() - HISTORY_SIZE),
 			history_.end(),
-			[&result](std::string const &string){ result.append(string); result.append("\r\n"); });
+			[&result](std::string const &string){ result.append(std::string(">> ") + string + "\r\n"); });
 		return result;
 	}
 };
@@ -76,7 +76,7 @@ public:
 	std::string get_response(std::string const &request) const
 	{
 		history_.clear();
-		return "reset done.\r\n";
+		return ">> reset done.\r\n";
 	}
 };
 
@@ -86,7 +86,7 @@ struct word_unkonw_error
 	virtual ~word_unkonw_error() {}
 	std::string get_response(std::string const &request) const
 	{
-		return "unknown word: " + request;
+		return ">> unknown word: " + request;
 	}
 };
 
@@ -97,16 +97,26 @@ class not_begin_with_previous_tail_error
 public:
 	not_begin_with_previous_tail_error(std::vector<std::string> &history)
 		: history_(history) {}
-	~not_begin_with_previous_tail_error() {}
+	virtual ~not_begin_with_previous_tail_error() {}
 	std::string get_response(std::string const &request) const
 	{
 		assert(!history_.empty());
 		std::string const previous_word(history_[history_.size() - 1]);
 
 		std::stringstream ss;
-		ss << request << " does not follow "
-		   << previous_word << "\r\n";
+		ss << ">> \"" << request << "\" does not follow \""
+		   << previous_word << "\"\r\n";
 		return ss.str();
+	}
+};
+
+class not_unique_word_error
+	: public request_handler
+{
+public:
+	std::string get_response(std::string const &request) const
+	{
+		return std::string(">> \"") + request + "\" is already appeared.\r\n";
 	}
 };
 
