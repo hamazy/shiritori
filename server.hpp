@@ -11,6 +11,7 @@
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
+#include <boost/algorithm/string/trim.hpp>
 
 #include "game.hpp"
 #include "player.hpp"
@@ -50,7 +51,7 @@ public:
 		std::string line;
 		std::istream stream(&buffer_);
 		std::getline(stream, line);
-		
+		boost::algorithm::trim(line);
 		game_.respond_to(line);
 		read_message();
 	}

@@ -80,6 +80,36 @@ public:
 	}
 };
 
+struct word_unkonw_error
+	: public request_handler
+{
+	virtual ~word_unkonw_error() {}
+	std::string get_response(std::string const &request) const
+	{
+		return "unknown word: " + request;
+	}
+};
+
+class not_begin_with_previous_tail_error
+	: public request_handler
+{
+	const std::vector<std::string> &history_;
+public:
+	not_begin_with_previous_tail_error(std::vector<std::string> &history)
+		: history_(history) {}
+	~not_begin_with_previous_tail_error() {}
+	std::string get_response(std::string const &request) const
+	{
+		assert(!history_.empty());
+		std::string const previous_word(history_[history_.size() - 1]);
+
+		std::stringstream ss;
+		ss << request << " does not follow "
+		   << previous_word << "\r\n";
+		return ss.str();
+	}
+};
+
 } // namespace shiritori
 
 #endif // SHIRITORI_REQUEST_HANDLER_HPP_
