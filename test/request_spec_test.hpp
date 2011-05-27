@@ -22,14 +22,25 @@ TEST(specific_command_test, history_command)
 	ASSERT_FALSE(history_command_spec(std::string(":historyy \r\n")));
 }
 
-struct foo1_spec
+class foo1_spec
 	: public shiritori::request_spec
 {
-	bool operator()(std::string const &request) const
+	int &arg1_;
+public:
+	typedef int &constructor_arg1_type;
+	foo1_spec(int &arg1)
+		: arg1_(arg1) {}
+	bool operator()(std::string const &) const
 	{
 		return true;
 	}
 };
 
+TEST(not_spec_test, one_argument)
+{
+	using shiritori::not_;
+	int value(0);
+	ASSERT_FALSE(not_<foo1_spec>(value)(std::string()));
+}
 
 #endif // SHIRITORI_REQUEST_SPEC_TEST_HPP_
