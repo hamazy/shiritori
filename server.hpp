@@ -40,7 +40,7 @@ public:
 		read_message();
 	}
 
-	void on_read(boost::system::error_code const &error, std::size_t bytes_transferred)
+	void on_read(boost::system::error_code const &error, std::size_t )
 	{
 		if (error)
 		{

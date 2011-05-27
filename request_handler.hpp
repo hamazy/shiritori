@@ -67,7 +67,7 @@ public:
 	show_history(std::vector<std::string> &history)
 		: history_(history) {}
 	virtual ~show_history() {}
-	std::string get_response(std::string const &request) const
+	std::string get_response(std::string const &) const
 	{
 		if (history_.empty()) return ">> no history.\r\n";
 		std::string result;
@@ -87,7 +87,7 @@ public:
 	reset_history(std::vector<std::string> &history)
 		: history_(history) {}
 	virtual ~reset_history() {}
-	std::string get_response(std::string const &request) const
+	std::string get_response(std::string const &) const
 	{
 		history_.clear();
 		return ">> reset done.\r\n";
@@ -142,7 +142,7 @@ class empty_request_error
 	: public request_handler
 {
 public:
-	std::string get_response(std::string const &request) const
+	std::string get_response(std::string const &) const
 	{
 		return std::string(">> empty request.\r\n");
 	}

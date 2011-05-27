@@ -100,7 +100,7 @@ public:
 struct any_request
 	: public request_spec
 {
-	bool operator()(std::string const &request) const
+	bool operator()(std::string const &) const
 	{
 		return true;
 	}
