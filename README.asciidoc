@@ -1,0 +1,26 @@
+Shiritori
+=========
+
+A sample toy program that demonstrates 'Shiritori'.
+
+Prerequisite
+------------
+
+* Autotools
+* Make
+* C\++ compiler with C++0x support
+* Boost
+
+How to build
+------------
+
+ $ autoreconv -if
+ $ ./configure CXXFLAGS="-std=c++0x"
+ $ make
+
+How to run
+----------
+
+ $ shiritori_server
+ exit
+ $

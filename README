@@ -1,4 +1,0 @@
-
- $ autoreconf -if
- $ CXXFLAGS="-g -O0 -Wall -Weffc++" LIBRARY_PATH=/opt/local/lib ./configure
- $ make
