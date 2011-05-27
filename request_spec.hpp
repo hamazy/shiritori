@@ -55,6 +55,7 @@ class not_
 {
 	ARG1 arg1_;
 public:
+	typedef ARG1 constructor_arg1_type;
 	not_(ARG1 arg1)
 		: arg1_(arg1) {}
 	bool operator()(std::string const &request) const

@@ -41,6 +41,7 @@ TEST(not_spec_test, one_argument)
 	using shiritori::not_;
 	int value(0);
 	ASSERT_FALSE(not_<foo1_spec>(value)(std::string()));
+	ASSERT_TRUE(not_<not_<foo1_spec> >(value)(std::string()));
 }
 
 #endif // SHIRITORI_REQUEST_SPEC_TEST_HPP_
