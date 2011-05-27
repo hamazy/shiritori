@@ -22,4 +22,14 @@ TEST(specific_command_test, history_command)
 	ASSERT_FALSE(history_command_spec(std::string(":historyy \r\n")));
 }
 
+struct foo1_spec
+	: public shiritori::request_spec
+{
+	bool operator()(std::string const &request) const
+	{
+		return true;
+	}
+};
+
+
 #endif // SHIRITORI_REQUEST_SPEC_TEST_HPP_

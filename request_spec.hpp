@@ -13,6 +13,7 @@ class request_spec
 	: public std::unary_function<std::string,bool>
 {
 public:
+	typedef void constructor_arg1_type;
 	virtual ~request_spec() {}
 	virtual bool operator()(std::string const &request) const = 0;
 };
@@ -21,7 +22,7 @@ template <typename SPEC>
 class spec_trait
 {
 public:
-	typedef void constructor_arg1_type;
+	typedef typename SPEC::constructor_arg1_type constructor_arg1_type;
 };
 
 template <typename SPEC1, typename SPEC2>
@@ -130,6 +131,8 @@ class begin_with_previous_tail
 {
 	std::vector<std::string> const &history_;
 public:
+	typedef const std::vector<std::string> &constructor_arg1_type;
+
 	begin_with_previous_tail(std::vector<std::string> const &history)
 		:history_(history) {}
 	bool operator()(std::string const &request) const
@@ -144,18 +147,13 @@ public:
 	}
 };
 
-template <>
-class spec_trait<begin_with_previous_tail>
-{
-public:
-	typedef const std::vector<std::string> &constructor_arg1_type;
-};
-
 class unique_word_request
 	: public request_spec
 {
 	std::vector<std::string> const &history_;
 public:
+	typedef const std::vector<std::string> &constructor_arg1_type;
+
 	unique_word_request(std::vector<std::string> const &history)
 		: history_(history) {}
 	bool operator()(std::string const &request) const
@@ -164,13 +162,6 @@ public:
 			history_.begin(), history_.end(),
 			std::bind1st(std::equal_to<std::string>(), request));
 	}
-};
-
-template<>
-class spec_trait<unique_word_request>
-{
-public:
-	typedef const std::vector<std::string> &constructor_arg1_type;
 };
 
 }
