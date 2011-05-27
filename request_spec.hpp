@@ -89,7 +89,7 @@ class specific_command_request
 	boost::xpressive::sregex const pattern_;
 public:
 	specific_command_request(char const *pattern)
-		: pattern_(boost::xpressive::sregex::compile(std::string(":") + pattern + std::string(".*"))) {}
+		: pattern_(boost::xpressive::sregex::compile(std::string(":\\s*") + pattern + std::string("\\W*"))) {}
 	bool operator()(std::string const &request) const
 	{
 		boost::xpressive::smatch what;
