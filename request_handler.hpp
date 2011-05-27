@@ -15,6 +15,16 @@ struct request_handler
 {
 	virtual ~request_handler() {}
 	virtual std::string get_response(std::string const &request) const = 0;
+	virtual void respond_to(std::set<player::pointer> &, player::pointer requesting_player, std::string const &response)
+	{
+		requesting_player->deliver(response);
+	}
+	virtual void notify_all(std::set<player::pointer> &players, std::string const &response)
+	{
+		std::for_each(
+			players.begin(), players.end(),
+			boost::bind(&player::deliver, _1, boost::ref(response)));
+	}
 };
 
 struct command_unknown_error
@@ -41,6 +51,10 @@ public:
 	{
 		history_.push_back(request);
 		return std::string("=> ") + request + "\r\n";
+	}
+	void respond_to(std::set<player::pointer> &players, player::pointer, std::string const &response)
+	{
+		notify_all(players, response);
 	}
 };
 
@@ -77,6 +91,10 @@ public:
 	{
 		history_.clear();
 		return ">> reset done.\r\n";
+	}
+	void respond_to(std::set<player::pointer> &players, player::pointer, std::string const &response)
+	{
+		notify_all(players, response);
 	}
 };
 
@@ -117,6 +135,16 @@ public:
 	std::string get_response(std::string const &request) const
 	{
 		return std::string(">> \"") + request + "\" is already appeared.\r\n";
+	}
+};
+
+class empty_request_error
+	: public request_handler
+{
+public:
+	std::string get_response(std::string const &request) const
+	{
+		return std::string(">> empty request.\r\n");
 	}
 };
 

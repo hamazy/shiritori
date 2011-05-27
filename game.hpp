@@ -121,13 +121,11 @@ public:
 
 	void respond_to(player::pointer requesting_player, std::string const &request)
 	{
-		request_handler const *handler(request_handlers_.find(request));
+		request_handler *handler(request_handlers_.find(request));
 		if (handler == 0) return;
 
-		const std::string response(handler->get_response(request));
-		std::for_each(
-			players_.begin(), players_.end(),
-			boost::bind(&player::deliver, _1, boost::ref(response)));
+		std::string const response(handler->get_response(request));
+		handler->respond_to(players_, requesting_player, response);
 	}
 
 	void add_request_handler(request_spec *spec, request_handler *handler)

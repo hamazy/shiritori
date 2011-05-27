@@ -29,8 +29,7 @@ class and_
 	: public request_spec
 {
 public:
-	virtual ~and_() {}
-	virtual bool operator()(std::string const &request) const
+	bool operator()(std::string const &request) const
 	{
 		if (!SPEC1()(request)) return false;
 		return SPEC2()(request);
@@ -42,8 +41,7 @@ class or_
 	: public request_spec
 {
 public:
-	virtual ~or_() {}
-	virtual bool operator()(std::string const &request) const
+	bool operator()(std::string const &request) const
 	{
 		if (SPEC1()(request)) return true;
 		return SPEC2()(request);
@@ -58,8 +56,7 @@ class not_
 public:
 	not_(ARG1 arg1)
 		: arg1_(arg1) {}
-	virtual ~not_() {}
-	virtual bool operator()(std::string const &request) const
+	bool operator()(std::string const &request) const
 	{
 		return !SPEC(arg1_)(request);
 	}
@@ -70,8 +67,7 @@ class not_<SPEC, void>
 	: public request_spec
 {
 public:
-	virtual ~not_() {}
-	virtual bool operator()(std::string const &request) const
+	bool operator()(std::string const &request) const
 	{
 		return !SPEC()(request);
 	}
@@ -80,7 +76,6 @@ public:
 struct command_request
 	: public request_spec
 {
-	virtual ~command_request() {}
 	bool operator()(std::string const &request) const
 	{
 		if (request.empty()) return false;
@@ -95,7 +90,6 @@ class specific_command_request
 public:
 	specific_command_request(char const *pattern)
 		: pattern_(boost::xpressive::sregex::compile(std::string(":") + pattern + std::string(".*"))) {}
-	virtual ~specific_command_request() {}
 	bool operator()(std::string const &request) const
 	{
 		boost::xpressive::smatch what;
@@ -106,7 +100,6 @@ public:
 struct any_request
 	: public request_spec
 {
-	virtual ~any_request() {}
 	bool operator()(std::string const &request) const
 	{
 		return true;
@@ -117,11 +110,19 @@ class known_word_request
 	: public request_spec
 {
 public:
-	virtual ~known_word_request() {}
 	bool operator()(std::string const &request) const
 	{
 		return true;			// TODO
 	}
+};
+
+struct empty_request
+	: public request_spec
+{
+	bool operator()(std::string const &request) const
+	{
+		return request.empty();
+	}	
 };
 
 class begin_with_previous_tail
@@ -131,10 +132,9 @@ class begin_with_previous_tail
 public:
 	begin_with_previous_tail(std::vector<std::string> const &history)
 		:history_(history) {}
-	virtual ~begin_with_previous_tail() {}
 	bool operator()(std::string const &request) const
 	{
-		if (request.empty()) return false;
+		assert(!request.empty());
 		if (history_.empty()) return true;
 		std::string const previous_word(history_.back());
 		if (previous_word.empty()) return true;
@@ -158,7 +158,6 @@ class unique_word_request
 public:
 	unique_word_request(std::vector<std::string> const &history)
 		: history_(history) {}
-	virtual ~unique_word_request() {}
 	bool operator()(std::string const &request) const
 	{
 		return history_.end() == find_if(
