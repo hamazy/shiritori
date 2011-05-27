@@ -1,8 +1,8 @@
 *.o
 *~
-/.deps
-/Makefile
-/Makefile.in
+.deps
+Makefile
+Makefile.in
 /aclocal.m4
 /autom4te.cache
 /config.h
@@ -17,3 +17,6 @@
 /stamp-h1
 /docbook-xsl.css
 /README.html
+/autoscan.log
+/configure.scan
+/test/tests
