@@ -14,12 +14,12 @@ Prerequisite
 How to build
 ------------
 
- $ autoreconv -if
- $ ./configure CXXFLAGS="-std=c++0x"
+ $ autoreconf -if
+ $ ./configure
  $ make
 
-How to run
-----------
+How to run (and exit)
+---------------------
 
  $ shiritori_server
  exit
