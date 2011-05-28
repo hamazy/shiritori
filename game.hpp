@@ -75,14 +75,14 @@ public:
 
 	request_handler *find(std::string const &request)
 	{
-		boost::transform_iterator<get_spec, container_type::iterator> end(boost::make_transform_iterator(request_handlers_.end(), get_spec()));
-		boost::transform_iterator<get_spec, container_type::iterator> found_spec(
+		auto end(boost::make_transform_iterator(request_handlers_.end(), get_spec()));
+		auto found_spec(
 			std::find_if(
 				boost::make_transform_iterator(request_handlers_.begin(), get_spec()),
 				end,
 				spec_conformed(request)));
 		if (found_spec == end) return 0;
-		container_type::iterator found_pair(found_spec.base());
+		auto found_pair(found_spec.base());
 		return found_pair->second;
 	}
 
