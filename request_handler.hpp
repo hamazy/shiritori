@@ -46,7 +46,6 @@ struct identical_response
 public:
 	identical_response(std::vector<std::string> &history)
 		: history_(history) {}
-	virtual ~identical_response() {}
 	std::string get_response(std::string const &request) const
 	{
 		history_.push_back(request);
@@ -66,7 +65,6 @@ class show_history
 public:
 	show_history(std::vector<std::string> &history)
 		: history_(history) {}
-	virtual ~show_history() {}
 	std::string get_response(std::string const &) const
 	{
 		if (history_.empty()) return ">> no history.\r\n";
@@ -86,7 +84,6 @@ class reset_history
 public:
 	reset_history(std::vector<std::string> &history)
 		: history_(history) {}
-	virtual ~reset_history() {}
 	std::string get_response(std::string const &) const
 	{
 		history_.clear();
@@ -101,7 +98,6 @@ public:
 struct word_unkonw_error
 	: public request_handler
 {
-	virtual ~word_unkonw_error() {}
 	std::string get_response(std::string const &request) const
 	{
 		return ">> unknown word: " + request;
@@ -115,7 +111,6 @@ class not_begin_with_previous_tail_error
 public:
 	not_begin_with_previous_tail_error(std::vector<std::string> &history)
 		: history_(history) {}
-	virtual ~not_begin_with_previous_tail_error() {}
 	std::string get_response(std::string const &request) const
 	{
 		assert(!history_.empty());
