@@ -44,4 +44,29 @@ TEST(not_spec_test, one_argument)
 	ASSERT_TRUE(not_<not_<foo1_spec> >(value)(std::string()));
 }
 
+class foo2_spec
+	: public shiritori::request_spec
+{
+	int &arg1_;
+	double &arg2_;
+public:
+	typedef int &constructor_arg1_type;
+	typedef double &constructor_arg2_type;
+	foo2_spec(int &arg1, double &arg2)
+		: arg1_(arg1)
+		, arg2_(arg2) {}
+	bool operator()(std::string const &) const
+	{
+		return true;
+	}
+};
+
+TEST(not_spec_test, two_arguments)
+{
+	using shiritori::not_;
+	int value1(0);
+	double value2(0.0);
+	ASSERT_FALSE(not_<foo2_spec>(value1, value2)(std::string()));
+	ASSERT_TRUE(not_<not_<foo2_spec> >(value1, value2)(std::string()));
+}
 #endif // SHIRITORI_REQUEST_SPEC_TEST_HPP_

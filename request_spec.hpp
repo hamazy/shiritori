@@ -14,6 +14,7 @@ class request_spec
 {
 public:
 	typedef void constructor_arg1_type;
+	typedef void constructor_arg2_type;
 	virtual ~request_spec() {}
 	virtual bool operator()(std::string const &request) const = 0;
 };
@@ -23,6 +24,7 @@ class spec_trait
 {
 public:
 	typedef typename SPEC::constructor_arg1_type constructor_arg1_type;
+	typedef typename SPEC::constructor_arg2_type constructor_arg2_type;
 };
 
 template <typename SPEC1, typename SPEC2>
@@ -49,8 +51,26 @@ public:
 	}
 };
 
-template <typename SPEC, typename ARG1 = typename spec_trait<SPEC>::constructor_arg1_type>
+template <typename SPEC, typename ARG1 = typename spec_trait<SPEC>::constructor_arg1_type, typename ARG2 = typename spec_trait<SPEC>::constructor_arg2_type >
 class not_
+	: public request_spec
+{
+	ARG1 arg1_;
+	ARG2 arg2_;
+public:
+	typedef ARG1 constructor_arg1_type;
+	typedef ARG2 constructor_arg2_type;
+	not_(ARG1 arg1, ARG2 arg2)
+		: arg1_(arg1)
+		, arg2_(arg2) {}
+	bool operator()(std::string const &request) const
+	{
+		return !SPEC(arg1_, arg2_)(request);
+	}
+};
+
+template <typename SPEC, typename ARG1>
+class not_<SPEC, ARG1, void>
 	: public request_spec
 {
 	ARG1 arg1_;
@@ -65,7 +85,7 @@ public:
 };
 
 template <typename SPEC>
-class not_<SPEC, void>
+class not_<SPEC, void, void>
 	: public request_spec
 {
 public:
