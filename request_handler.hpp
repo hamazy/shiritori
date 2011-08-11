@@ -39,7 +39,7 @@ struct command_unknown_error
 	}
 };
 
-struct identical_response
+class identical_response
 	: public request_handler
 {
 	std::vector<std::string> &history_;
