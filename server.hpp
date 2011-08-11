@@ -149,7 +149,7 @@ public:
 	{
 		session::pointer session(
 			session::create(
-				acceptor_.io_service(), game_));
+				io_service_, game_));
 
 		acceptor_.async_accept(
 			session->socket(),
